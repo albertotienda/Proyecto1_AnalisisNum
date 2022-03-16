@@ -1,0 +1,287 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include "pai.h"
+
+int main(){
+	char entrada[' ']; 
+	int pasos, n, i, j, k, l, valido, opcion, indefinido;
+	float sistema[' '][' '], matriz[' '][' '], x;
+	do
+	{
+		system("cls");
+		pasos = 0;
+		
+		//Pantalla inicial y lectura de numero de variables
+		do{
+			system("cls");
+			printf("\n\n\n\t SOLUCIONADOR DE SISTEMA DE ECUACIONES - METODO DE GAUSS JORDAN");
+			printf("\n\n\t Ingrese el numero de variables en su sistema: ");
+			fflush(stdin);
+			gets(entrada);
+			valido = EsEnteroValido(entrada, &n, "ERROR: Intenta nuevamente.");
+			if(valido && n < 2){
+				valido = 0;
+				printf("\n\n\t ERROR: Numero no valido. Intenta nuevamente.");
+				printf("\n\n\n\n\n\t ");
+				system("pause");
+			}
+		} while (!valido);
+		do{
+			system("cls");
+			printf("\n\n\t Mostrar el procedimiento paso a paso [SI=1, NO=0]: ");
+			fflush(stdin);
+			gets(entrada);
+			valido = EsEnteroValido(entrada, &pasos, "ERROR: Intenta nuevamente.");
+			if(valido && pasos != 1 && pasos != 0){
+				valido = 0;
+				printf("\n\n\t ERROR: Numero no valido. Intenta nuevamente.");
+				printf("\n\n\n\n\n\t ");
+				system("pause");
+			}
+		} while (!valido);
+		
+		//Lectura del sistema
+		do{
+			for(i = 0; i < n; i++){
+				for(j = 0; j <= n; j++){
+					sistema[i][j] = LeerSistema(n, i, j);
+					matriz[i][j] = sistema[i][j];
+				}
+			}
+			for(i = 0; i < n; i++){
+				for(k = 0; k < n; k++){
+					if(k != i){
+						if(matriz[i][0] == matriz[k][0]){
+							for(j = 0; j < n; j++){
+								if(matriz[i][j] != matriz[k][j]){
+									valido = 1;
+									break;
+								}
+								else
+									valido = 0;
+							}
+						}
+					}
+				}
+			}
+			if(!valido){
+				printf("\n\n\t ERROR: No se permite ingresar ecuaciones identicas. Intenta nuevamente.");
+				printf("\n\n\n\n\n\t ");
+				system("pause");
+			}
+		}while(!valido);
+		
+		//Solucionar sistema
+		indefinido = 0;
+		if(pasos){
+			system("cls");
+			printf("\n\t Procedimiento");
+		}
+		for(i = 0; i < n; i++){
+			x = matriz[i][i];
+			if(x == 0){
+				indefinido = 1;
+				break;
+			}
+			
+			for(j = 0; j <= n; j++){
+				matriz[i][j] /= x;
+				if(pasos){
+					printf("\n\n\t Dividiendo A[%d][%d] entre %.3f", i, j, x);				
+					ImprimirMatriz(n, matriz);
+				}
+			}
+			for(k = 0; k < n; k++){
+				if(k != i){
+					x = matriz[k][i];
+					for(j = 0; j <= n; j++){
+
+						matriz[k][j] -= matriz[i][j]*x;
+						if(pasos){
+							printf("\n\n\t Restando columna %d para hacer ceros en la columna %d", i,i);
+							ImprimirMatriz(n, matriz);
+						}
+					}
+				}
+			}
+		}
+		
+		if(indefinido){
+			printf("\n\n\t ERROR: Valores indefinidos en la matriz.");
+			printf("\n\t Causa: valor en la diagonal principal = 0.");
+			printf("\n\t Intenta con ecuaciones diferentes.");
+			printf("\n\n\t");
+			system("pause");
+		}
+		else
+		{
+			if(pasos){
+			printf("\n\n\t");
+			system("pause");
+			}
+		}
+
+		//Pantalla final 
+		do{
+		system("cls");
+
+		if(!indefinido){
+			printf("\n\n\t Sistema de ecuaciones:");
+			ImprimirSistema(n, sistema);
+			
+			printf("\n\n\t Matriz resultante del metodo de Gauss Jordan:");
+			ImprimirMatriz(n, matriz);
+			
+			printf("\n\n\t Solucion:");
+			for(i = 0; i < n; i++){
+				printf("\n\t x%d = %.3f", i+1, matriz[i][n]);
+			}
+		
+			printf("\n\n\t Calcular la solucion para otro sistema [SI=1, NO=0]: ");
+		}
+		else{
+			printf("\n\n\t Volver a la pantalla inicial [SI=1, NO=0]: ");
+		}
+			fflush(stdin);
+			gets(entrada);
+			valido = EsEnteroValido(entrada, &opcion, "ERROR: Intenta nuevamente.");
+			if(valido && opcion != 1 && opcion != 0){
+				valido = 0;
+				printf("\n\t ERROR: Intenta nuevamente.");
+				printf("\n\n\n\n\n\t ");
+				system("pause");
+			}
+		} while (!valido);
+	
+	} while (opcion==1);
+
+	return 0;
+}										
+																	
+int EsEnteroValido(char entrada[], int* salida, char mensajeDeError[])
+{
+	int i, valido = 1;
+
+	if (entrada[0] == '\0')
+		valido = 0;
+	else
+		for (i = 0; i < strlen(entrada); i++)
+		{
+			if (!isdigit(entrada[i]) && entrada[i]!= '-')
+				valido = 0;
+		}
+
+	if (valido == 0)
+	{
+		printf("\n\n\t %s", mensajeDeError);
+		printf("\n\n\n\n\n\t ");
+		system("pause");
+	}
+	else
+		*salida = atoi(entrada);
+	return valido;
+}
+
+int EsFlotanteValido(char entrada[], float* salida, char mensajeDeError[])
+{
+	int i, valido = 1, punto = 0;
+	
+	if(entrada[0] == '\0')
+		valido = 0;
+		
+	if (!isdigit(entrada[0]) && entrada[0] != '.' && entrada[0] != '-')
+		valido = 0;
+				
+	for (i = 1; i < strlen(entrada); i++){
+		
+		if (!isdigit(entrada[i]) && entrada[i] != '.')
+			valido = 0;
+		
+		if(entrada[i] == '.' && punto == 0)
+			punto = 1;
+		else
+			if(entrada[i] == '.' && punto == 1)
+				valido = 0;
+	}
+	
+	if(strlen(entrada) == 1){
+		if(entrada[0] == '.' || entrada[0] == '-')
+			valido = 0;
+	}
+	
+	if (valido == 0)
+	{
+		printf("\n\n\t %s", mensajeDeError);
+		printf("\n\n\n\n\n\t ");
+		system("pause");
+	}
+	else
+		*salida = atof(entrada);
+	
+	return valido;
+}
+
+float LeerSistema(int N, int i, int j){
+	int valido;
+	float k;
+	char entrada[' '];
+	
+	do {
+		system("cls");
+		printf("\n\n\t LECTURA DEL SISTEMA ");
+		printf("\n\n\t Ingresa los valores requeridos.");
+		printf("\n\n\t Ecuacion %d", i+1);
+		if(j<N)
+			printf("\n\n\t Coeficiente x%d: ", j+1);
+		else
+			printf("\n\n\t Resultado: ");
+		fflush(stdin);
+		gets(entrada);
+		valido = EsFlotanteValido(entrada, &k, "ERROR: Intente nuevamente");
+		if(i == j && k == 0){
+			valido = 0;
+			printf("\n\n\t ERROR: Intente nuevamente");
+			printf("\n\n\n\n\n\t ");
+			system("pause");		}
+	} while (!valido);
+	return k;
+}
+
+void ImprimirSistema(int n, float sistema[' '][' ']){
+ 	int i, j;
+ 	
+	for(i=0; i<n; i++)
+ 	{
+ 		printf("\n");
+ 		for(j = 0; j <= n; j++){
+ 			if(j<n)
+ 			{
+ 				if(sistema[i][j] >= 0)
+ 					printf("\t +%.3f x%d", sistema[i][j], j+1);
+ 				else
+ 					printf("\t %.3f x%d", sistema[i][j], j+1);
+ 			}
+ 			else
+ 				if(sistema[i][j] >= 0)
+ 					printf("\t = %.3f", sistema[i][j]);
+ 				else
+ 					printf("\t = %.3f", sistema[i][j]);
+ 		}
+ 	}
+ }
+ 
+void ImprimirMatriz(int n, float matriz[' '][' ']){
+ 	int i, j;
+	
+	for(i = 0; i < n; i++){
+		printf("\n");
+		for(j = 0; j <= n; j++){
+			if(j==n)
+				printf("\t | \t %.3f", matriz[i][j]);
+			else
+				printf("\t %.3f", matriz[i][j]);
+		}
+	}
+ }
